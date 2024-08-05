@@ -22,7 +22,7 @@ class Config {
   public EC2_URL: string | undefined;
 
   private readonly DEFAULT_DATABASE_URL =
-    "mongodb://localhost:27017/userealm-backend";
+    "mongodb://localhost:27017/artisano-dev";
 
   constructor() {
     this.DATABASE_URL = process.env.DATABASE_URL || this.DEFAULT_DATABASE_URL;
