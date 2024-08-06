@@ -1,8 +1,19 @@
-import { IAuthDocument } from "../interfaces/auth.interface";
+import { IAuthDocument, IBaseAuthUser } from "../interfaces/auth.interface";
 import { AuthModel } from "../models/auth.schema";
-import { Helpers } from "src/shared/globals/helpers/helpers";
+import { UserModel } from "../../user/models/user.schema";
+import { Helpers } from "../../../shared/globals/helpers/helpers";
+import { IUserDocument } from "src/features/user/interfaces/user.interface";
 
 class AuthService {
+  public async getUserByEmail(email: string): Promise<IUserDocument> {
+    const user: IUserDocument = (await UserModel.findOne({
+      email: Helpers.lowerCase(email),
+    })
+      .select("_id name email role")
+      .exec()) as IUserDocument;
+
+    return user;
+  }
   public async createAuthUser(data: IAuthDocument): Promise<void> {
     await AuthModel.create(data);
   }

@@ -1,5 +1,5 @@
 import { BaseQueue } from "./base.queue";
-import { IUserJob } from "src/features/user/interfaces/user.interface";
+import { IUserJob } from "../../features/user/interfaces/user.interface";
 import { userWorker } from "../workers/user.worker";
 
 class UserQueue extends BaseQueue {
