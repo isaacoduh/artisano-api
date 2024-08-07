@@ -88,8 +88,10 @@ export class AuthController {
     }
 
     const passwordsMatch: boolean = await existingUser.comparePassword(
-      password
+      password,
+      existingUser.password!
     );
+
     if (!passwordsMatch) {
       throw new BadRequestError("Invalid Credentials");
     }

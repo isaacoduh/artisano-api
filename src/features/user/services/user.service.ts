@@ -37,9 +37,16 @@ class UserService {
     const user: IUserDocument = (await UserModel.findOne({
       email: Helpers.lowerCase(email),
     })
-      .select("_id name email role")
+      .select("_id name email role password")
       .exec()) as IUserDocument;
     return user;
+  }
+
+  public async updateUserToSeller(userId: string): Promise<void> {
+    await UserModel.updateOne(
+      { _id: userId },
+      { $set: { role: "seller" } }
+    ).exec();
   }
 }
 

@@ -9,7 +9,7 @@ export interface IUserDocument extends Document {
   password?: string;
   role?: string;
   createdAt?: Date;
-  comparePassword(password: string): Promise<boolean>;
+  comparePassword(password: string, hashedPassword: string): Promise<boolean>;
   hashPassword(password: string): Promise<string>;
 }
 
