@@ -16,6 +16,7 @@ import { uploads } from "src/shared/globals/helpers/cloudinary-upload";
 import JWT from "jsonwebtoken";
 import { config } from "../../../config";
 import { userService } from "../../../features/user/services/user.service";
+import { loginSchema } from "../schemas/signin";
 
 const userCache: UserCache = new UserCache();
 
@@ -78,6 +79,71 @@ export class AuthController {
     });
   }
 
+  @joiValidation(loginSchema)
+  public async signin(req: Request, res: Response): Promise<void> {
+    const { email, password } = req.body;
+    const existingUser: IUserDocument = await userService.getUserByEmail(email);
+    if (!existingUser) {
+      throw new BadRequestError("Invalid Credentials");
+    }
+
+    const passwordsMatch: boolean = await existingUser.comparePassword(
+      password
+    );
+    if (!passwordsMatch) {
+      throw new BadRequestError("Invalid Credentials");
+    }
+
+    const user: IUserDocument = await userService.getUserById(
+      `${existingUser._id}`
+    );
+
+    const userJwt: string = JWT.sign(
+      {
+        userId: user._id,
+        uId: existingUser.uId,
+        email: existingUser.email,
+        role: existingUser.role,
+      },
+      config.JWT_TOKEN!
+    );
+    req.session = { jwt: userJwt };
+    // const userDocument: IUserDocument = { user } as IUserDocument;
+    res.status(HTTP_STATUS.OK).json({
+      message: "User login successful",
+      user: user,
+      token: userJwt,
+    });
+  }
+
+  public async getCurrentUser(req: Request, res: Response): Promise<void> {
+    let isUser = false;
+    let token = null;
+    let user = null;
+
+    const cachedUser: IUserDocument = (await userCache.getUserFromCache(
+      `${req.currentUser?.userId}`
+    )) as IUserDocument;
+
+    const existingUser: IUserDocument = cachedUser
+      ? cachedUser
+      : await userService.getUserById(`${req.currentUser?.userId}`);
+
+    if (Object.keys(existingUser).length) {
+      isUser = true;
+      token = req.session?.jwt;
+      user = existingUser;
+    }
+    res.status(HTTP_STATUS.OK).json({ token, isUser, user });
+  }
+
+  public async signout(req: Request, res: Response): Promise<void> {
+    req.session = null;
+    res
+      .status(HTTP_STATUS.OK)
+      .json({ message: "Logout successful", user: {}, token: "" });
+  }
+
   private signupData(data: ISignUpData): IUserDocument {
     const { _id, uId, name, email, password } = data;
     return {
@@ -98,7 +164,7 @@ export class AuthController {
       name,
       email,
       password,
-      role,
+      role: "customer",
     } as unknown as IUserDocument;
   }
 

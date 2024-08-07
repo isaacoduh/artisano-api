@@ -1,3 +1,4 @@
+import { Helpers } from "./../../../shared/globals/helpers/helpers";
 import {
   // IBasicInfo,
   // ISearchUser,
@@ -23,6 +24,22 @@ class UserService {
       { username },
       { $set: { password: hashedPassword } }
     ).exec();
+  }
+
+  public async getUserById(userId: string): Promise<IUserDocument> {
+    const user: IUserDocument = (await UserModel.findById(userId).select(
+      "_id name email role"
+    )) as IUserDocument;
+    return user;
+  }
+
+  public async getUserByEmail(email: string): Promise<IUserDocument> {
+    const user: IUserDocument = (await UserModel.findOne({
+      email: Helpers.lowerCase(email),
+    })
+      .select("_id name email role")
+      .exec()) as IUserDocument;
+    return user;
   }
 }
 

@@ -9,6 +9,7 @@ import { indexOf, findIndex } from "lodash";
 import { config } from "../../config";
 import { ServerError } from "../../shared/globals/helpers/error-handler";
 import { RedisCommandRawReply } from "@redis/client/dist/lib/commands";
+import { Helpers } from "../../shared/globals/helpers/helpers";
 
 const log: Logger = config.createLogger("userCache");
 // type UserItem = string | ISocialLinks | INotificationSettings;
@@ -38,6 +39,7 @@ export class UserCache extends BaseCache {
       name: `${name}`,
       email: `${email}`,
       role: `${role}`,
+      createdAt: `${createdAt}`,
     };
 
     try {
@@ -49,9 +51,7 @@ export class UserCache extends BaseCache {
         value: `${key}`,
       });
 
-      for (const [itemKey, itemValue] of Object.entries(dataToSave)) {
-        await this.client.HSET(`user:${key}`, `${itemKey}`, `${itemValue}`);
-      }
+      await this.client.HSET(`users:${key}`, dataToSave);
     } catch (error) {
       log.error(error);
       throw new ServerError("Server Error. Try again");
@@ -114,5 +114,24 @@ export class UserCache extends BaseCache {
     //   log.error(error);
     //   throw new ServerError("Server Error. Try again");
     // }
+  }
+
+  public async getUserFromCache(userId: string): Promise<IUserDocument | null> {
+    try {
+      if (!this.client.isOpen) {
+        await this.client.connect();
+      }
+
+      console.log(userId);
+
+      const response: IUserDocument = (await this.client.HGETALL(
+        `users:${userId}`
+      )) as unknown as IUserDocument;
+      response.createdAt = new Date(Helpers.parseJson(`${response.createdAt}`));
+      return response;
+    } catch (error) {
+      log.error(error);
+      throw new ServerError("Server Error. Try again");
+    }
   }
 }

@@ -46,5 +46,7 @@ export const authMock = {
   _id: "60263f14648fed5246e322d3",
   name: "John Simons",
   email: "john@me.com",
+  role: "customer",
   createdAt: "2022-08-31T07:42:24.451Z",
+  comparePassword: () => false,
 } as unknown as IUserDocument;
